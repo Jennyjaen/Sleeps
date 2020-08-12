@@ -133,6 +133,10 @@ public class GoogleFit extends AppCompatActivity {
 
         });
     }
+
+    public void accessDateSleep(){
+
+    }
     private void accessGoogleFit() {
         Calendar cal = Calendar.getInstance();
         cal.setTime(new Date());

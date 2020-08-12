@@ -15,14 +15,16 @@ import android.hardware.SensorManager;
 import android.location.Address;
 import android.location.Geocoder;
 import android.location.Location;
+import android.location.LocationManager;
 import android.os.Build;
 import android.os.IBinder;
 import android.util.Log;
 import android.widget.Toast;
-
+import com.projects.sleeps.ActivityRecognition;
 import com.google.android.gms.auth.api.signin.GoogleSignInOptionsExtension;
 import com.google.android.gms.location.FusedLocationProviderClient;
 import com.google.android.gms.location.LocationCallback;
+import com.google.android.gms.location.LocationListener;
 import com.google.android.gms.location.LocationRequest;
 import com.google.android.gms.location.LocationResult;
 import com.google.android.gms.location.LocationServices;
@@ -73,6 +75,9 @@ public class RecordService extends Service implements SensorEventListener {
     private MainActivity activity;
     private long totalSleepTime;
     private GoogleFit googleFit;
+    private ActivityRecognition activityRecognition;
+    LocationListener locationListener;
+    LocationManager locationManager;
     LocationRequest locationRequest;
     LocationCallback locationCallback;
     FusedLocationProviderClient fusedLocationProviderClient;
@@ -104,7 +109,8 @@ public class RecordService extends Service implements SensorEventListener {
     }
 
     private void startGPSservice() {
-
+        locationManager=(LocationManager)getSystemService(this.LOCATION_SERVICE);
+        fusedLocationProviderClient=LocationServices.getFusedLocationProviderClient(this);
         locationRequest = new LocationRequest();
         locationCallback = new LocationCallback() {
 
@@ -136,13 +142,20 @@ public class RecordService extends Service implements SensorEventListener {
     private void updateUIValues(Location location) {
         //update values of location GPS
         Log.d("Record Service","here we comes to update UI values");
-        String lat, lon, accuracy, altitude, speed, address;
+        String lat, lon, accuracy, altitude, speed, address,bearing;
 
         lat=String.valueOf(location.getLatitude());
         lon=String.valueOf(location.getLongitude());
         accuracy=String.valueOf(location.getAccuracy());
+
         long cur_Time = System.currentTimeMillis();
 
+        if(location.hasBearing()){
+            bearing=String.valueOf(location.getBearing());
+        }
+        else{
+            bearing="No Bearing Value";
+        }
         if (location.hasAltitude()) {
             altitude=String.valueOf(location.getAltitude());
         } else {
@@ -165,7 +178,7 @@ public class RecordService extends Service implements SensorEventListener {
         try {
             outputStream = openFileOutput(file_name, Context.MODE_APPEND);
             outputStream.write((cur_Time + ": Lonitude: " +lon+ "\n"+ ": Latitude: " +lat+ "\n"+ ": Accuracy: " +accuracy+ "\n"+ ": Altitude: " +altitude+ "\n"
-                    + ": Speed: " +speed+ "\n"+ ": Address: " +address+ "\n").getBytes());
+                    + ": Speed: " +speed+ "\n"+ ": Address: " +address+ "\n"+": Bearing: "+bearing).getBytes());
             outputStream.close();
         } catch (IOException e) {
             e.printStackTrace();
