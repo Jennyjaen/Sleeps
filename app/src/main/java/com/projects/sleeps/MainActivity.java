@@ -31,7 +31,7 @@ public class MainActivity extends AppCompatActivity {
         }}
 
     public void startService(View v){
-        Toast.makeText(this, "click good", Toast.LENGTH_SHORT).show();
+        //Toast.makeText(this, "click good", Toast.LENGTH_SHORT).show();
         Intent serviceIntent=new Intent(this, RecordService.class);
         ContextCompat.startForegroundService(this, serviceIntent);
     }

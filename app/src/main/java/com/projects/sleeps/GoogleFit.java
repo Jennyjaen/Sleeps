@@ -30,6 +30,8 @@ import com.google.android.gms.fitness.request.SessionReadRequest;
 import com.google.android.gms.fitness.result.SessionReadResponse;
 import com.google.android.gms.tasks.Task;
 
+import java.io.FileOutputStream;
+import java.io.IOException;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
@@ -42,6 +44,8 @@ public class GoogleFit extends AppCompatActivity {
     private static final String TAG = "Google Fitness Service";
     private MainActivity activity;
     private long totalSleepTime;
+    FileOutputStream outputStream;
+    String file_name = "result file";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -116,7 +120,13 @@ public class GoogleFit extends AppCompatActivity {
                         }
                         long start=point.getStartTime(TimeUnit.MILLISECONDS);
                         long end=point.getEndTime(TimeUnit.MILLISECONDS);
-
+                        try {
+                            outputStream = openFileOutput(file_name, Context.MODE_APPEND);
+                            outputStream.write(("Sleep Time: "+start+" to "+ end+ sleepStage+"\n").getBytes());
+                            outputStream.close();
+                        } catch (IOException e) {
+                            e.printStackTrace();
+                        }
                     }
                 }
             }
