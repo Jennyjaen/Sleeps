@@ -1,13 +1,12 @@
 package com.projects.sleeps;
 
-import android.Manifest;
-import android.annotation.SuppressLint;
+import android.app.AlarmManager;
 import android.app.Notification;
 import android.app.PendingIntent;
 import android.app.Service;
 import android.content.Context;
 import android.content.Intent;
-import android.content.pm.PackageManager;
+import android.database.Observable;
 import android.hardware.Sensor;
 import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
@@ -19,49 +18,35 @@ import android.location.LocationManager;
 import android.os.Build;
 import android.os.IBinder;
 import android.util.Log;
-import android.widget.Toast;
-import com.projects.sleeps.ActivityRecognition;
+
 import com.google.android.gms.auth.api.signin.GoogleSignInOptionsExtension;
+import com.google.android.gms.common.util.JsonUtils;
 import com.google.android.gms.location.FusedLocationProviderClient;
 import com.google.android.gms.location.LocationCallback;
 import com.google.android.gms.location.LocationListener;
 import com.google.android.gms.location.LocationRequest;
 import com.google.android.gms.location.LocationResult;
 import com.google.android.gms.location.LocationServices;
-import com.google.android.gms.tasks.OnSuccessListener;
-import com.projects.sleeps.GoogleFit;
+
 import static com.google.android.gms.fitness.data.DataType.TYPE_ACTIVITY_SEGMENT;
-import static com.projects.sleeps.MainActivity.PERMISSIONS_FINE_LOCATION;
 import static com.projects.sleeps.Service.CHANNEL_ID;
 import androidx.annotation.Nullable;
 import androidx.annotation.RequiresApi;
-import androidx.core.app.ActivityCompat;
 import androidx.core.app.NotificationCompat;
-import androidx.core.content.ContextCompat;
 
 import com.google.android.gms.auth.api.signin.GoogleSignIn;
 import com.google.android.gms.auth.api.signin.GoogleSignInAccount;
-import com.google.android.gms.fitness.Fitness;
 import com.google.android.gms.fitness.FitnessOptions;
-import com.google.android.gms.fitness.data.DataPoint;
-import com.google.android.gms.fitness.data.DataSet;
-import com.google.android.gms.fitness.data.DataType;
-import com.google.android.gms.fitness.data.Field;
-import com.google.android.gms.fitness.data.Session;
-import com.google.android.gms.fitness.request.DataReadRequest;
-import com.google.android.gms.fitness.request.SessionReadRequest;
-import com.google.android.gms.fitness.result.SessionReadResponse;
-import com.google.android.gms.tasks.Task;
-import static com.google.android.gms.fitness.data.DataType.TYPE_ACTIVITY_SEGMENT;
+
+import org.json.JSONException;
+import org.json.JSONObject;
+
+import java.io.File;
 import java.io.FileOutputStream;
+import java.io.FileWriter;
 import java.io.IOException;
-import java.security.Permissions;
-import java.util.Calendar;
-import java.util.Date;
+import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.Executor;
-import java.util.concurrent.TimeUnit;
-import java.util.stream.Collectors;
 
 
 public class RecordService extends Service implements SensorEventListener {
@@ -70,17 +55,27 @@ public class RecordService extends Service implements SensorEventListener {
     SensorManager sensorManager;
     Sensor sensor_light, sensor_accel, sensor_gyro, sensor_cnstep, sensor_dtstep, sensor_rotate, sensor_motion, sensor_pose, sensor_sigmotion, sensor_linaccel;
     FileOutputStream outputStream;
-    String file_name = "result file";
+    String file_name = "result file"+".json";
     private static final String TAG = "Google Fitness Service";
     private MainActivity activity;
     private long totalSleepTime;
     private GoogleFit googleFit;
-    private ActivityRecognition activityRecognition;
+    private Recognition activityRecognition;
     LocationListener locationListener;
     LocationManager locationManager;
     LocationRequest locationRequest;
     LocationCallback locationCallback;
     FusedLocationProviderClient fusedLocationProviderClient;
+    private List<DatedActivity> datedActivities=new ArrayList<>();
+    private Observable<DatedActivity> observable;
+
+    File file=new File(this.getFilesDir(), file_name);
+    //FileWriter fileWriter=new FileWriter(file);
+    JSONObject jsonObject=new JSONObject();
+    JSONObject geoObject=new JSONObject();
+    JSONObject sleepObject=new JSONObject();
+    JSONObject activityObject=new JSONObject();
+    JSONObject sensorObject=new JSONObject();
 
     @Override
     public void onCreate() {
@@ -88,8 +83,73 @@ public class RecordService extends Service implements SensorEventListener {
         super.onCreate();
         }
 
+    public void writegeo(String lat, String lon, String speed, String add, String accuracy, String altitude, String bear){
+        long cur_time=System.currentTimeMillis();
+        try {
+            geoObject.put(cur_time+" " +"Latitude: ", lat);
+            geoObject.put(cur_time+" " +"Lonitude: ", lon);
+            geoObject.put(cur_time+" " +"Altitude: ", altitude);
+            geoObject.put(cur_time+" " +"Speed: ", speed);
+            geoObject.put(cur_time+" " +"Accuracy: ", accuracy);
+            geoObject.put(cur_time+" " +"Address: ", add);
+            geoObject.put(cur_time+" " +"Bearing: ", bear);
+            //jsonObject.put(cur_time+" " +"geo "+String.valueOf(cur_time)+":",geoObject);
 
+        }catch (JSONException e){e.printStackTrace();}
 
+    }
+
+    public void writesensor(String type, String val_x, String val_y, String val_z){
+        long cur_time=System.currentTimeMillis();
+        try {
+            //sensorObject.put("Latitude", lat);
+            if(type=="Accel"||type=="Gyro"||type=="Lin Accel"||type=="Rotate"){
+                sensorObject.put(cur_time+" " +type+": x axis: ", val_x);
+                sensorObject.put(cur_time+" " +type+": y axis: ", val_y);
+                sensorObject.put(cur_time+" " +type+": z axis: ", val_z);
+            }
+            else if(type=="Light"||type=="Step"){
+                sensorObject.put(cur_time+" " +type+": ", val_x);
+            }
+            //jsonObject.put("sensor "+String.valueOf(cur_time)+":",sensorObject);
+
+        }catch (JSONException e){e.printStackTrace();}
+
+    }
+
+    public void writesleep(String type, long start_time, long end_time){
+        long cur_time=System.currentTimeMillis();
+        try {
+            sleepObject.put(type+": ", start_time+" to "+end_time);
+            //jsonObject.put("sleep "+String.valueOf(cur_time)+":",geoObject);
+        }catch (JSONException e){e.printStackTrace();}
+
+    }
+
+    public void writeactivity(String lat, String lon, String speed, String add){
+        long cur_time=System.currentTimeMillis();
+        try {
+            geoObject.put("Latitude", lat);
+            geoObject.put("Lonitude", lon);
+            geoObject.put("Address", add);
+            geoObject.put("Speed", speed);
+            jsonObject.put("activity "+String.valueOf(cur_time)+":",geoObject);
+
+        }catch (JSONException e){e.printStackTrace();}
+
+    }
+
+    public void writeall(){
+        long cur_time=System.currentTimeMillis();
+        try {
+            jsonObject.put("sensor "+String.valueOf(cur_time)+":",sensorObject);
+            jsonObject.put("sleep "+String.valueOf(cur_time)+":",sleepObject);
+            jsonObject.put("geo "+String.valueOf(cur_time)+":",geoObject);
+            jsonObject.put("activity "+String.valueOf(cur_time)+":",activityObject);
+
+        }catch (JSONException e){e.printStackTrace();}
+
+    }
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
 
@@ -107,6 +167,7 @@ public class RecordService extends Service implements SensorEventListener {
         collectFit();
         return START_STICKY;
     }
+
 
     private void startGPSservice() {
         locationManager=(LocationManager)getSystemService(this.LOCATION_SERVICE);
@@ -175,10 +236,15 @@ public class RecordService extends Service implements SensorEventListener {
             address ="Cannot find address";
         }
 
+        //How to write as JSON try1
+        writegeo(lat, lon, speed, address, accuracy, altitude, bearing);
+
+        //How to write as JSON try2. file name as .json
         try {
             outputStream = openFileOutput(file_name, Context.MODE_APPEND);
             outputStream.write((cur_Time + ": Lonitude: " +lon+ "\n"+ ": Latitude: " +lat+ "\n"+ ": Accuracy: " +accuracy+ "\n"+ ": Altitude: " +altitude+ "\n"
                     + ": Speed: " +speed+ "\n"+ ": Address: " +address+ "\n"+": Bearing: "+bearing).getBytes());
+
             outputStream.close();
         } catch (IOException e) {
             e.printStackTrace();
@@ -192,28 +258,23 @@ public class RecordService extends Service implements SensorEventListener {
         sensor_linaccel = sensorManager.getDefaultSensor(Sensor.TYPE_LINEAR_ACCELERATION);
         sensor_gyro = sensorManager.getDefaultSensor(Sensor.TYPE_GYROSCOPE);
         sensor_cnstep = sensorManager.getDefaultSensor(Sensor.TYPE_STEP_COUNTER);
-        sensor_dtstep = sensorManager.getDefaultSensor(Sensor.TYPE_STEP_DETECTOR);
         sensor_rotate = sensorManager.getDefaultSensor(Sensor.TYPE_ROTATION_VECTOR);
         sensor_motion = sensorManager.getDefaultSensor(Sensor.TYPE_MOTION_DETECT);
-        sensor_pose = sensorManager.getDefaultSensor(Sensor.TYPE_POSE_6DOF);
-        sensor_sigmotion = sensorManager.getDefaultSensor(Sensor.TYPE_SIGNIFICANT_MOTION);
 
         sensorManager.registerListener(this, sensor_light, 1000000);
         sensorManager.registerListener(this, sensor_accel, 1000000);
         sensorManager.registerListener(this, sensor_linaccel, 1000000);
         sensorManager.registerListener(this, sensor_gyro, 1000000);
         sensorManager.registerListener(this, sensor_cnstep, (SensorManager.SENSOR_DELAY_NORMAL * 5));
-        sensorManager.registerListener(this, sensor_dtstep, (SensorManager.SENSOR_DELAY_NORMAL * 5));
         sensorManager.registerListener(this, sensor_rotate, 1000000);
         sensorManager.registerListener(this, sensor_motion, (SensorManager.SENSOR_DELAY_NORMAL * 5));
-        sensorManager.registerListener(this, sensor_sigmotion, (SensorManager.SENSOR_DELAY_NORMAL * 5));
-        sensorManager.registerListener(this, sensor_pose, (SensorManager.SENSOR_DELAY_NORMAL * 5));
 
     }
 
     private void stopMeasurement(){
         sensorManager.unregisterListener(this);
     }
+
 
     @RequiresApi(api= Build.VERSION_CODES.N)
     public void collectFit(){
@@ -225,6 +286,7 @@ public class RecordService extends Service implements SensorEventListener {
             GoogleSignInAccount googleSignInAccount=GoogleSignIn.getLastSignedInAccount(this);
             if(GoogleSignIn.hasPermissions(googleSignInAccount, fitnessOptions)){
                 googleFit.accessSleepData();
+                //activityRecognition.onHandleIntent();
             }
         }catch (Exception e){
             Log.e("Record Service","collect denied");
@@ -274,6 +336,7 @@ public class RecordService extends Service implements SensorEventListener {
         //Toast.makeText(this, "sensor is working!", Toast.LENGTH_SHORT).show();
         if (Sensor.TYPE_LIGHT == sensorEvent.sensor.getType()) {
             //tv_light.setText(String.valueOf(sensorEvent.values[0]));
+            writesensor("Light", String.valueOf(sensorEvent.values[0]),null,null);
             try {
                 outputStream = openFileOutput(file_name, Context.MODE_APPEND);
                 outputStream.write((cur_Time + ": Light: " + String.valueOf(sensorEvent.values[0]) + "\n").getBytes());
@@ -317,10 +380,10 @@ public class RecordService extends Service implements SensorEventListener {
             } catch (IOException e) {
                 e.printStackTrace();
             }
-        } else if (Sensor.TYPE_STEP_DETECTOR == sensorEvent.sensor.getType()) {
+        } /*else if (Sensor.TYPE_STEP_DETECTOR == sensorEvent.sensor.getType()) {
             // += sensorEvent.values[0];
             //tv_dtstep.setText(String.valueOf(stepdetect));
-        } else if (Sensor.TYPE_ROTATION_VECTOR == sensorEvent.sensor.getType()) {
+        }*/ else if (Sensor.TYPE_ROTATION_VECTOR == sensorEvent.sensor.getType()) {
             try {
                 outputStream = openFileOutput(file_name, Context.MODE_APPEND);
                 outputStream.write((cur_Time + ": Rotation-x : " + String.valueOf(sensorEvent.values[0]) + " Rotation-y: " + String.valueOf(sensorEvent.values[1]) + " Rotation-z: " + String.valueOf(sensorEvent.values[2])).getBytes());
@@ -329,16 +392,6 @@ public class RecordService extends Service implements SensorEventListener {
                 e.printStackTrace();
             }
             //tv_rotate.setText(String.valueOf(sensorEvent.values[0]));
-        } else if (Sensor.TYPE_MOTION_DETECT == sensorEvent.sensor.getType()) {
-            //tv_motion.setText(String.valueOf(sensorEvent.values[0]));
-        } else if (Sensor.TYPE_SIGNIFICANT_MOTION == sensorEvent.sensor.getType()) {
-            //tv_sigmotion.setText(String.valueOf(sensorEvent.values[0]));
-        } else if (Sensor.TYPE_POSE_6DOF == sensorEvent.sensor.getType()) {
-            //tv_pose.setText(String.valueOf(sensorEvent.values[0]));
-        } else if (Sensor.TYPE_HEART_BEAT == sensorEvent.sensor.getType()) {
-           // tv_heartb.setText(String.valueOf(sensorEvent.values[0]));
-        } else if (Sensor.TYPE_HEART_RATE == sensorEvent.sensor.getType()) {
-           // tv_heartr.setText(String.valueOf(sensorEvent.values[0]));
         }
     }
 

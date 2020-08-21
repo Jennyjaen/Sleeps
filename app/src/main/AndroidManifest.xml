@@ -26,6 +26,8 @@
             </intent-filter>
         </activity>
         <service android:name=".RecordService"/>
+        <service android:name=".EveryRecord"
+            android:permission="android.permission.BIND_JOB_SERVICE"/>
     </application>
 
 </manifest>
