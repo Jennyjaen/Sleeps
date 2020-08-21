@@ -17,8 +17,9 @@ public class EveryRecord extends JobService {
     //should check what service it will use!
     JobScheduler jobScheduler=(JobScheduler)getSystemService(Context.JOB_SCHEDULER_SERVICE);
     JobInfo jobInfo=new JobInfo.Builder(1, new ComponentName(this, EveryRecord.class))
-            /*Do once a week*/
+            /*Do once a day*/
             .setPeriodic(TimeUnit.DAYS.toMillis(1))
+
             .build();
     RecordService service=new RecordService();
 
@@ -45,6 +46,6 @@ public class EveryRecord extends JobService {
 
     @Override
     public boolean onStopJob(JobParameters jobParameters) {
-        return false;
+        return true;
     }
 }

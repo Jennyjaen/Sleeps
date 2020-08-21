@@ -10,16 +10,23 @@ import android.content.pm.PackageManager;
 import android.os.Build;
 import android.os.Bundle;
 import android.view.View;
+import android.widget.ProgressBar;
 import android.widget.Toast;
 
 public class MainActivity extends AppCompatActivity {
     private static final int PERMISSIONS_REQUEST_ACTIVITY_RECOGNITION = 3;
     public static final int PERMISSIONS_FINE_LOCATION = 99;
+    ProgressBar progressBar;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+
+        Intent load_intent=new Intent(this, Loading.class);
+        startActivity(load_intent);
+
+        progressBar=(ProgressBar)findViewById(R.id.loading);
         String[] PERMISSIONS = {
                 Manifest.permission.ACTIVITY_RECOGNITION,
                 Manifest.permission.ACCESS_FINE_LOCATION

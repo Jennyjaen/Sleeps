@@ -25,7 +25,10 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+        <activity android:name=".Loading"
+            android:theme="@android:style/Theme.NoTitleBar.Fullscreen"/>
         <service android:name=".RecordService"/>
+
         <service android:name=".EveryRecord"
             android:permission="android.permission.BIND_JOB_SERVICE"/>
     </application>
