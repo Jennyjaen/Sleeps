@@ -26,7 +26,6 @@ public class MainActivity extends AppCompatActivity {
         Intent load_intent=new Intent(this, Loading.class);
         startActivity(load_intent);
 
-        progressBar=(ProgressBar)findViewById(R.id.loading);
         String[] PERMISSIONS = {
                 Manifest.permission.ACTIVITY_RECOGNITION,
                 Manifest.permission.ACCESS_FINE_LOCATION

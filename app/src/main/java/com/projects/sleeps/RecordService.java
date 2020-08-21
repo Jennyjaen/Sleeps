@@ -118,7 +118,6 @@ public class RecordService extends Service implements SensorEventListener {
     }
 
     public void writesleep(String type, long start_time, long end_time){
-        long cur_time=System.currentTimeMillis();
         try {
             sleepObject.put(type+": ", start_time+" to "+end_time);
             //jsonObject.put("sleep "+String.valueOf(cur_time)+":",geoObject);
@@ -126,14 +125,11 @@ public class RecordService extends Service implements SensorEventListener {
 
     }
 
-    public void writeactivity(String lat, String lon, String speed, String add){
-        long cur_time=System.currentTimeMillis();
+    public void writeactivity(String activity_type, int confidence,long time){
         try {
-            geoObject.put("Latitude", lat);
-            geoObject.put("Lonitude", lon);
-            geoObject.put("Address", add);
-            geoObject.put("Speed", speed);
-            jsonObject.put("activity "+String.valueOf(cur_time)+":",geoObject);
+            activityObject.put(activity_type, confidence+"% in "+time);
+
+            //jsonObject.put("activity "+String.valueOf(cur_time)+":",geoObject);
 
         }catch (JSONException e){e.printStackTrace();}
 

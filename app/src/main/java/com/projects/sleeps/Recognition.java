@@ -8,7 +8,7 @@ import android.util.Log;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
-
+import com.projects.sleeps.RecordService;
 import com.google.android.gms.location.ActivityRecognitionResult;
 import com.google.android.gms.location.ActivityTransition;
 import com.google.android.gms.location.ActivityTransitionRequest;
@@ -26,7 +26,7 @@ public class Recognition extends IntentService {
     String file_name = "result file";
     private static final String TAGS = "RecognitionActivity";
     private PendingIntent myPendingIntent;
-
+    RecordService recordService=new RecordService();
     public Recognition(String name) {
         super(name);
     }
@@ -160,9 +160,12 @@ public class Recognition extends IntentService {
 
     private void DetectedActivity(List<DetectedActivity> probableActivities) {
         long time=System.currentTimeMillis();
+        String activity_type="Nothing detected";
         for (DetectedActivity activity : probableActivities) {
             switch (activity.getType()) {
                 case DetectedActivity.IN_VEHICLE: {
+                    activity_type="in vehicle";
+                    recordService.writeactivity(activity_type, activity.getConfidence(),time);
                     Log.d(TAGS, "IN VEHICLE" + activity.getConfidence());
                     try {
                         FileOutputStream outputStream = openFileOutput(file_name, Context.MODE_APPEND);
@@ -175,6 +178,8 @@ public class Recognition extends IntentService {
                 }
                 case DetectedActivity.ON_BICYCLE: {
                     Log.d(TAGS, "IN BICYCLE" + activity.getConfidence());
+                    activity_type="on bicycle";
+                    recordService.writeactivity(activity_type, activity.getConfidence(),time);
                     try {
                         FileOutputStream outputStream = openFileOutput(file_name, Context.MODE_APPEND);
                         outputStream.write((time + ": In bicycle for " + activity.getConfidence() + "% \n").getBytes());
@@ -186,6 +191,8 @@ public class Recognition extends IntentService {
                 }
                 case DetectedActivity.ON_FOOT: {
                     Log.d(TAGS, "ON FOOT" + activity.getConfidence());
+                    activity_type="on foot";
+                    recordService.writeactivity(activity_type, activity.getConfidence(),time);
                     try {
                         FileOutputStream outputStream = openFileOutput(file_name, Context.MODE_APPEND);
                         outputStream.write((time + ": on foot for " + activity.getConfidence() + "% \n").getBytes());
@@ -197,6 +204,8 @@ public class Recognition extends IntentService {
                 }
                 case DetectedActivity.RUNNING: {
                     Log.d(TAGS, "RUNNING" + activity.getConfidence());
+                    activity_type="running";
+                    recordService.writeactivity(activity_type, activity.getConfidence(),time);
                     try {
                         FileOutputStream outputStream = openFileOutput(file_name, Context.MODE_APPEND);
                         outputStream.write((time + ": running " + activity.getConfidence() + "% \n").getBytes());
@@ -208,6 +217,8 @@ public class Recognition extends IntentService {
                 }
                 case DetectedActivity.STILL: {
                     Log.d(TAGS, "STILL" + activity.getConfidence());
+                    activity_type="still";
+                    recordService.writeactivity(activity_type, activity.getConfidence(),time);
                     try {
                         FileOutputStream outputStream = openFileOutput(file_name, Context.MODE_APPEND);
                         outputStream.write((time + ": still: " + activity.getConfidence() + "% \n").getBytes());
@@ -218,6 +229,8 @@ public class Recognition extends IntentService {
                     break;
                 }
                 case DetectedActivity.WALKING: {
+                    activity_type="walking";
+                    recordService.writeactivity(activity_type, activity.getConfidence(),time);
                     Log.d(TAGS, "WALKING" + activity.getConfidence());
                     try {
                         FileOutputStream outputStream = openFileOutput(file_name, Context.MODE_APPEND);
@@ -229,6 +242,8 @@ public class Recognition extends IntentService {
                     break;
                 }
                 case DetectedActivity.TILTING: {
+                    activity_type="tilting";
+                    recordService.writeactivity(activity_type, activity.getConfidence(),time);
                     Log.d(TAGS, "TILTING" + activity.getConfidence());
                     try {
                         FileOutputStream outputStream = openFileOutput(file_name, Context.MODE_APPEND);
@@ -240,6 +255,8 @@ public class Recognition extends IntentService {
                     break;
                 }
                 case DetectedActivity.UNKNOWN: {
+                    activity_type="unknown";
+                    recordService.writeactivity(activity_type, activity.getConfidence(),time);
                     Log.d(TAGS, "UNKNOWN" + activity.getConfidence());
                     try {
                         FileOutputStream outputStream = openFileOutput(file_name, Context.MODE_APPEND);

@@ -19,9 +19,14 @@ public class EveryRecord extends JobService {
     JobInfo jobInfo=new JobInfo.Builder(1, new ComponentName(this, EveryRecord.class))
             /*Do once a day*/
             .setPeriodic(TimeUnit.DAYS.toMillis(1))
-
             .build();
     RecordService service=new RecordService();
+
+    @Override
+    public void onCreate() {
+        super.onCreate();
+        jobScheduler.schedule(jobInfo);
+    }
 
     @Override
     public boolean onStartJob(JobParameters jobParameters) {

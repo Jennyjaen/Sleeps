@@ -12,7 +12,8 @@ import android.os.Bundle;
 import android.provider.CalendarContract;
 import android.util.Log;
 import android.widget.TextView;
-
+import com.projects.sleeps.Service;
+import com.projects.sleeps.RecordService;
 import androidx.annotation.RequiresApi;
 import androidx.appcompat.app.AppCompatActivity;
 
@@ -45,7 +46,8 @@ public class GoogleFit extends AppCompatActivity {
     private MainActivity activity;
     private long totalSleepTime;
     FileOutputStream outputStream;
-    String file_name = "result file";
+    String file_name = "result file"+".json";
+    RecordService service=new RecordService();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -120,6 +122,7 @@ public class GoogleFit extends AppCompatActivity {
                         }
                         long start=point.getStartTime(TimeUnit.MILLISECONDS);
                         long end=point.getEndTime(TimeUnit.MILLISECONDS);
+                        service.writesleep(sleepStage,start, end);
                         try {
                             outputStream = openFileOutput(file_name, Context.MODE_APPEND);
                             outputStream.write(("Sleep Time: "+start+" to "+ end+ sleepStage+"\n").getBytes());
