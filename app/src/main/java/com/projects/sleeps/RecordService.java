@@ -1,5 +1,6 @@
 package com.projects.sleeps;
 
+import android.annotation.SuppressLint;
 import android.app.AlarmManager;
 import android.app.Notification;
 import android.app.PendingIntent;
@@ -68,6 +69,7 @@ public class RecordService extends Service implements SensorEventListener {
     FusedLocationProviderClient fusedLocationProviderClient;
     private List<DatedActivity> datedActivities=new ArrayList<>();
     private Observable<DatedActivity> observable;
+    GPSListener gpsListener;
 
     File file=new File(this.getFilesDir(), file_name);
     //FileWriter fileWriter=new FileWriter(file);
@@ -76,6 +78,8 @@ public class RecordService extends Service implements SensorEventListener {
     JSONObject sleepObject=new JSONObject();
     JSONObject activityObject=new JSONObject();
     JSONObject sensorObject=new JSONObject();
+    private GPSTracker gpsTracker;
+
 
     @Override
     public void onCreate() {
@@ -83,7 +87,7 @@ public class RecordService extends Service implements SensorEventListener {
         super.onCreate();
         }
 
-    public void writegeo(String lat, String lon, String speed, String add, String accuracy, String altitude, String bear){
+    public void writegeo(String lat, String lon, String speed, /*String add,*/ String accuracy, String altitude, String bear){
         long cur_time=System.currentTimeMillis();
         try {
             geoObject.put(cur_time+" " +"Latitude: ", lat);
@@ -91,7 +95,7 @@ public class RecordService extends Service implements SensorEventListener {
             geoObject.put(cur_time+" " +"Altitude: ", altitude);
             geoObject.put(cur_time+" " +"Speed: ", speed);
             geoObject.put(cur_time+" " +"Accuracy: ", accuracy);
-            geoObject.put(cur_time+" " +"Address: ", add);
+            //geoObject.put(cur_time+" " +"Address: ", add);
             geoObject.put(cur_time+" " +"Bearing: ", bear);
             //jsonObject.put(cur_time+" " +"geo "+String.valueOf(cur_time)+":",geoObject);
 
@@ -165,87 +169,18 @@ public class RecordService extends Service implements SensorEventListener {
     }
 
 
+    @SuppressLint("MissingPermission")
     private void startGPSservice() {
-        locationManager=(LocationManager)getSystemService(this.LOCATION_SERVICE);
-        fusedLocationProviderClient=LocationServices.getFusedLocationProviderClient(this);
-        locationRequest = new LocationRequest();
-        locationCallback = new LocationCallback() {
-
-
-            @Override
-            public void onLocationResult(LocationResult locationResult) {
-                super.onLocationResult(locationResult);
-                //save location
-                Location location = locationResult.getLastLocation();
-                updateUIValues(location);
-            }
-        };
-        locationRequest.setInterval(1000 * DEFAULT_UPDATE);
-        locationRequest.setFastestInterval(1000*FAST_UPDATE);
-        locationRequest.setPriority(LocationRequest.PRIORITY_BALANCED_POWER_ACCURACY);
-        //TODO: get battery status and change priority to GPS service
-
+        if(locationManager==null){
+        locationManager=(LocationManager)getSystemService(this.LOCATION_SERVICE);}
+        if(gpsListener==null){
+            gpsListener=new GPSListener(gpsTracker);
+        }
+        locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 1000*60, 0, gpsListener);
 
         //startLocationUpdates();
     }
 
- /*   @SuppressLint("MissingPermission")
-    private void startLocationUpdates() {
-        //tv_updates.setText("Start update");
-        fusedLocationProviderClient.requestLocationUpdates(locationRequest, locationCallback, null);
-        updateGPS();
-    }*/
-
-    private void updateUIValues(Location location) {
-        //update values of location GPS
-        Log.d("Record Service","here we comes to update UI values");
-        String lat, lon, accuracy, altitude, speed, address,bearing;
-
-        lat=String.valueOf(location.getLatitude());
-        lon=String.valueOf(location.getLongitude());
-        accuracy=String.valueOf(location.getAccuracy());
-
-        long cur_Time = System.currentTimeMillis();
-
-        if(location.hasBearing()){
-            bearing=String.valueOf(location.getBearing());
-        }
-        else{
-            bearing="No Bearing Value";
-        }
-        if (location.hasAltitude()) {
-            altitude=String.valueOf(location.getAltitude());
-        } else {
-            altitude="No Altitude Value";
-        }
-        if (location.hasSpeed()) {
-            speed=String.valueOf(location.getSpeed());
-        } else {
-            speed="No Speed Value";
-        }
-
-        Geocoder geocoder = new Geocoder(RecordService.this);
-        try {
-            List<Address> addresses = geocoder.getFromLocation(location.getLatitude(), location.getLongitude(), 1);
-            address=addresses.get(0).getAddressLine(0);
-        } catch (Exception e) {
-            address ="Cannot find address";
-        }
-
-        //How to write as JSON try1
-        writegeo(lat, lon, speed, address, accuracy, altitude, bearing);
-
-        //How to write as JSON try2. file name as .json
-        try {
-            outputStream = openFileOutput(file_name, Context.MODE_APPEND);
-            outputStream.write((cur_Time + ": Lonitude: " +lon+ "\n"+ ": Latitude: " +lat+ "\n"+ ": Accuracy: " +accuracy+ "\n"+ ": Altitude: " +altitude+ "\n"
-                    + ": Speed: " +speed+ "\n"+ ": Address: " +address+ "\n"+": Bearing: "+bearing).getBytes());
-
-            outputStream.close();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-    }
 
     public void startMeasurement(){
         sensorManager = (SensorManager) getSystemService(this.SENSOR_SERVICE);
@@ -289,25 +224,7 @@ public class RecordService extends Service implements SensorEventListener {
         }
     }
 
-  /*  private void updateGPS() {
-        fusedLocationProviderClient = LocationServices.getFusedLocationProviderClient(RecordService.this);
-        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
-            fusedLocationProviderClient.getLastLocation().addOnSuccessListener((Executor) this, new
-                    OnSuccessListener<Location>() {
-                        @Override
-                        public void onSuccess(Location location) {
-                            //got permissions
-                            updateUIValues(location);
-                        }
-                    });
-        } else {
-            //permision denied
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-                requestPermissions(new String[]{Manifest.permission.ACCESS_FINE_LOCATION}, PERMISSIONS_FINE_LOCATION);
-            }
-        }
-    }
-*/
+
     @Override
     public void onDestroy() {
         super.onDestroy();
@@ -317,7 +234,7 @@ public class RecordService extends Service implements SensorEventListener {
     }
 
     private void stopGPSservice() {
-        fusedLocationProviderClient.removeLocationUpdates(locationCallback);
+        locationManager.removeUpdates(gpsListener);
     }
 
     @Nullable
