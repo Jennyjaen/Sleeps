@@ -64,9 +64,6 @@ public class RecordService extends Service implements SensorEventListener {
     private Recognition activityRecognition;
     LocationListener locationListener;
     LocationManager locationManager;
-    LocationRequest locationRequest;
-    LocationCallback locationCallback;
-    FusedLocationProviderClient fusedLocationProviderClient;
     private List<DatedActivity> datedActivities=new ArrayList<>();
     private Observable<DatedActivity> observable;
     GPSListener gpsListener;
@@ -177,7 +174,6 @@ public class RecordService extends Service implements SensorEventListener {
             gpsListener=new GPSListener(gpsTracker);
         }
         locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 1000*60, 0, gpsListener);
-
         //startLocationUpdates();
     }
 
