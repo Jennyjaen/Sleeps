@@ -68,7 +68,7 @@ public class RecordService extends Service implements SensorEventListener {
     private Observable<DatedActivity> observable;
     GPSListener gpsListener;
 
-    File file=new File(this.getFilesDir(), file_name);
+    //File file=new File(this.getFilesDir(), file_name);
     //FileWriter fileWriter=new FileWriter(file);
     JSONObject jsonObject=new JSONObject();
     JSONObject geoObject=new JSONObject();
@@ -80,7 +80,6 @@ public class RecordService extends Service implements SensorEventListener {
 
     @Override
     public void onCreate() {
-        android.util.Log.i("Test", "onCreate()");
         super.onCreate();
         }
 
@@ -230,7 +229,7 @@ public class RecordService extends Service implements SensorEventListener {
     }
 
     private void stopGPSservice() {
-        locationManager.removeUpdates(gpsListener);
+       locationManager.removeUpdates(gpsListener);
     }
 
     @Nullable
