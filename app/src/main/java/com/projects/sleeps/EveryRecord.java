@@ -5,15 +5,23 @@ import android.app.job.JobScheduler;
 import android.app.job.JobService;
 import android.content.ComponentName;
 import android.content.Context;
+import android.util.JsonReader;
 
 import com.google.android.gms.common.internal.safeparcel.SafeParcelable;
+import com.google.firebase.database.DatabaseReference;
+import com.google.firebase.database.FirebaseDatabase;
 import com.projects.sleeps.RecordService;
 
 import org.json.JSONObject;
 
+import java.util.HashMap;
+import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
 public class EveryRecord extends JobService {
+
+    private FirebaseDatabase firebaseDatabase=FirebaseDatabase.getInstance();
+    private DatabaseReference databaseReference=firebaseDatabase.getReference();
     //should check what service it will use!
     JobScheduler jobScheduler=(JobScheduler)getSystemService(Context.JOB_SCHEDULER_SERVICE);
     JobInfo jobInfo=new JobInfo.Builder(1, new ComponentName(this, EveryRecord.class))
@@ -30,7 +38,6 @@ public class EveryRecord extends JobService {
 
     @Override
     public boolean onStartJob(JobParameters jobParameters) {
-
         service.writeall();
         /*initialize JSON object about sleep, activity, sensor*/
         service.sensorObject=new JSONObject();
@@ -38,6 +45,8 @@ public class EveryRecord extends JobService {
         service.activityObject=new JSONObject();
         service.sleepObject=new JSONObject();
         /*TODO: Send this JSONobject to server: service.JsonObject or file from internal storage*/
+        databaseReference=firebaseDatabase.getReference().child("Info");
+        databaseReference.setValue(service.jsonObject);
 
         /*after sending it, initialize: wait for 1 hour to finish sending*/
         try {

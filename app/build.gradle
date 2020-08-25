@@ -39,5 +39,7 @@ dependencies {
     implementation 'pl.charmas.android:android-reactive-location:0.8@aar'
     implementation 'io.reactivex:rxandroid:1.1.0'
     implementation 'com.jakewharton:butterknife:7.0.1'
+    implementation 'com.google.firebase:firebase-core:17.0.0'
+    implementation 'com.google.firebase:firebase-database:16.0.6'
 
 }
