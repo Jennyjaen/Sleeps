@@ -37,4 +37,7 @@ dependencies {
     implementation 'com.google.android.gms:play-services-fitness:18.0.0'
     implementation 'com.google.android.gms:play-services-auth:18.1.0'
     implementation 'pl.charmas.android:android-reactive-location:0.8@aar'
+    implementation 'io.reactivex:rxandroid:1.1.0'
+    implementation 'com.jakewharton:butterknife:7.0.1'
+
 }

@@ -7,7 +7,6 @@ import android.app.PendingIntent;
 import android.app.Service;
 import android.content.Context;
 import android.content.Intent;
-import android.database.Observable;
 import android.hardware.Sensor;
 import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
@@ -19,9 +18,10 @@ import android.location.LocationManager;
 import android.os.Build;
 import android.os.IBinder;
 import android.util.Log;
-
+import pl.charmas.android.reactivelocation.ReactiveLocationProvider;
 import com.google.android.gms.auth.api.signin.GoogleSignInOptionsExtension;
 import com.google.android.gms.common.util.JsonUtils;
+import com.google.android.gms.location.ActivityRecognitionResult;
 import com.google.android.gms.location.FusedLocationProviderClient;
 import com.google.android.gms.location.LocationCallback;
 import com.google.android.gms.location.LocationListener;
@@ -41,12 +41,16 @@ import com.google.android.gms.fitness.FitnessOptions;
 
 import org.json.JSONException;
 import org.json.JSONObject;
-
+import rx.Observable;
+import rx.Subscriber;
+import rx.Subscription;
+import rx.functions.Func1;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 
 
@@ -67,6 +71,7 @@ public class RecordService extends Service implements SensorEventListener {
     private List<DatedActivity> datedActivities=new ArrayList<>();
     private Observable<DatedActivity> observable;
     GPSListener gpsListener;
+    private Subscription subscription;
 
     //File file=new File(this.getFilesDir(), file_name);
     //FileWriter fileWriter=new FileWriter(file);
@@ -76,6 +81,7 @@ public class RecordService extends Service implements SensorEventListener {
     JSONObject activityObject=new JSONObject();
     JSONObject sensorObject=new JSONObject();
     private GPSTracker gpsTracker;
+    ReactiveLocationProvider reactiveLocationProvider=new ReactiveLocationProvider(this);
 
 
     @Override
@@ -161,7 +167,40 @@ public class RecordService extends Service implements SensorEventListener {
         startMeasurement();
         startGPSservice();
         collectFit();
+        startactivity();
+
         return START_STICKY;
+    }
+
+    private void startactivity() {
+        long cur_time=System.currentTimeMillis();
+        observable=reactiveLocationProvider.getDetectedActivity(0)
+                .map(new Func1<ActivityRecognitionResult, DatedActivity>(){
+                    @Override
+                    public DatedActivity call(ActivityRecognitionResult activityRecognitionResult){
+                        return new DatedActivity(activityRecognitionResult.getMostProbableActivity());
+                    }
+                });
+        subscription=observable
+                .subscribe(new Subscriber<DatedActivity>() {
+                    @Override
+                    public void onCompleted() {
+
+                    }
+
+                    @Override
+                    public void onError(Throwable e) {
+                        Log.e("Activity Service", e.getMessage());
+                    }
+
+                    @Override
+                    public void onNext(DatedActivity datedActivity) {
+                        datedActivities.add(datedActivity);
+                        writeactivity(datedActivity.getType(),datedActivity.getConfidence(),cur_time );
+                    }
+                });
+
+
     }
 
 
@@ -225,7 +264,14 @@ public class RecordService extends Service implements SensorEventListener {
         super.onDestroy();
         stopMeasurement();
         stopGPSservice();
+        stopActivity();
 
+    }
+
+    private void stopActivity() {
+        if(subscription!=null){
+            subscription.unsubscribe();
+        }
     }
 
     private void stopGPSservice() {
@@ -238,6 +284,9 @@ public class RecordService extends Service implements SensorEventListener {
         return null;
     }
 
+    public Observable<DatedActivity> getObservable(){
+        return observable.startWith(datedActivities);
+    }
     @Override
     public void onSensorChanged(SensorEvent sensorEvent) {
         long cur_Time = System.currentTimeMillis();
