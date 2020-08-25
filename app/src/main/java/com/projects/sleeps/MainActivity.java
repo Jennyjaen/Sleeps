@@ -41,7 +41,7 @@ public class MainActivity extends AppCompatActivity {
 
     public void startService(View v){
         name=nameInput.getText().toString();
-        Toast.makeText(this, name, Toast.LENGTH_SHORT).show();
+        //Toast.makeText(this, name, Toast.LENGTH_SHORT).show();
         Intent serviceIntent=new Intent(this, RecordService.class);
         ContextCompat.startForegroundService(this, serviceIntent);
     }
