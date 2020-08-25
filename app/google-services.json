@@ -1,0 +1,47 @@
+{
+  "project_info": {
+    "project_number": "684884252894",
+    "firebase_url": "https://sleeps-cc370.firebaseio.com",
+    "project_id": "sleeps-cc370",
+    "storage_bucket": "sleeps-cc370.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:684884252894:android:67897eec7db9d6a6058a4f",
+        "android_client_info": {
+          "package_name": "com.projects.sleeps"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "684884252894-tl651o0jiuhtofcem0aj1nh608bu1fdb.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAqQb_C5umiO3Vwebbwq5agfacLknAng7k"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "684884252894-tl651o0jiuhtofcem0aj1nh608bu1fdb.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "684884252894-e72pdtadfchenkia8fbl9cod1gm7ecgc.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.quotlabs.Sleeps.debug"
+              }
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
