@@ -6,7 +6,7 @@ import android.app.job.JobService;
 import android.content.ComponentName;
 import android.content.Context;
 import android.util.JsonReader;
-
+import com.projects.sleeps.MainActivity;
 import com.google.android.gms.common.internal.safeparcel.SafeParcelable;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
@@ -19,7 +19,7 @@ import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
 public class EveryRecord extends JobService {
-
+    MainActivity main=new MainActivity();
     private FirebaseDatabase firebaseDatabase=FirebaseDatabase.getInstance();
     private DatabaseReference databaseReference=firebaseDatabase.getReference();
     //should check what service it will use!
@@ -29,6 +29,7 @@ public class EveryRecord extends JobService {
             .setPeriodic(TimeUnit.DAYS.toMillis(1))
             .build();
     RecordService service=new RecordService();
+    String user=main.name;
 
     @Override
     public void onCreate() {
@@ -45,7 +46,7 @@ public class EveryRecord extends JobService {
         service.activityObject=new JSONObject();
         service.sleepObject=new JSONObject();
         /*TODO: Send this JSONobject to server: service.JsonObject or file from internal storage*/
-        databaseReference=firebaseDatabase.getReference().child("Info");
+        databaseReference=firebaseDatabase.getReference().child(user);
         databaseReference.setValue(service.jsonObject);
 
         /*after sending it, initialize: wait for 1 hour to finish sending*/

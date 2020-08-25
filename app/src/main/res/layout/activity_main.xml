@@ -33,10 +33,34 @@
         android:id="@+id/imageView"
         android:layout_width="100dp"
         android:layout_height="160dp"
-        app:srcCompat="@drawable/transparent"
-        app:layout_constraintBottom_toTopOf="@id/button"
+        android:layout_marginBottom="8dp"
+        app:layout_constraintBottom_toTopOf="@id/text_name"
+        app:layout_constraintHorizontal_bias="0.498"
         app:layout_constraintLeft_toLeftOf="parent"
         app:layout_constraintRight_toRightOf="parent"
-         />
+        app:srcCompat="@drawable/transparent" />
 
+    <TextView
+        android:id="@+id/text_name"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Name: "
+        app:layout_constraintBottom_toTopOf="@id/imageView"
+        app:layout_constraintHorizontal_bias="0.379"
+        app:layout_constraintLeft_toLeftOf="parent"
+        app:layout_constraintRight_toRightOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/button"
+        app:layout_constraintVertical_bias="0.311" />
+
+    <EditText
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:hint="ex) Jenny"
+        android:id="@+id/get_name"
+        app:layout_constraintBottom_toTopOf="@id/imageView"
+        app:layout_constraintHorizontal_bias="0.234"
+        app:layout_constraintLeft_toLeftOf="@id/text_name"
+        app:layout_constraintRight_toRightOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/button"
+        app:layout_constraintVertical_bias="0.325" />
 </androidx.constraintlayout.widget.ConstraintLayout>

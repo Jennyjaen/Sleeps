@@ -10,18 +10,21 @@ import android.content.pm.PackageManager;
 import android.os.Build;
 import android.os.Bundle;
 import android.view.View;
+import android.widget.EditText;
 import android.widget.ProgressBar;
 import android.widget.Toast;
 
 public class MainActivity extends AppCompatActivity {
+    String name;
     private static final int PERMISSIONS_REQUEST_ACTIVITY_RECOGNITION = 3;
     public static final int PERMISSIONS_FINE_LOCATION = 99;
     ProgressBar progressBar;
-
+    EditText nameInput;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+        nameInput=(EditText) findViewById(R.id.get_name);
 
         Intent load_intent=new Intent(this, Loading.class);
         startActivity(load_intent);
@@ -37,7 +40,8 @@ public class MainActivity extends AppCompatActivity {
         }}
 
     public void startService(View v){
-        //Toast.makeText(this, "click good", Toast.LENGTH_SHORT).show();
+        name=nameInput.getText().toString();
+        Toast.makeText(this, name, Toast.LENGTH_SHORT).show();
         Intent serviceIntent=new Intent(this, RecordService.class);
         ContextCompat.startForegroundService(this, serviceIntent);
     }
